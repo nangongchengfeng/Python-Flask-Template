@@ -1,0 +1,9 @@
+APScheduler==3.10.4
+flasgger==0.9.7.1
+Flask==2.2.5
+Flask_Cors==4.0.0
+Flask_HTTPAuth==4.5.0
+Flask_Migrate==3.1.0
+Flask_SQLAlchemy==2.5.1
+itsdangerous==2.1.2
+PyMySQL==1.1.0
