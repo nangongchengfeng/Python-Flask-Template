@@ -4,14 +4,21 @@
 # @Email   : 1794748404@qq.com
 # @File    : __init__.py.py
 # @Software: PyCharm
+from flask_socketio import SocketIO, emit
 
-from apscheduler.schedulers.background import BackgroundScheduler
 from flasgger import Swagger
 from flask_cors import CORS
 from flask_migrate import Migrate
 
 from app.config import config
 from app.extension import db
+from flask import Flask
+
+__author__ = '南宫乘风'
+app = Flask(__name__)
+# socket 的信息
+socketio = SocketIO(app, cors_allowed_origins="*")
+from app.extension import config_extensions
 
 swagger_config = {
     "headers": [
@@ -53,26 +60,19 @@ swagger_template = {
 def create_app(DevelopmentConfig=None):
     if DevelopmentConfig is None:
         DevelopmentConfig = 'development'
-    from flask import Flask
-
-    app = Flask(__name__)
-    from app.extension import config_extensions
 
     # 加载配置项
     app.config.from_object(config.get(DevelopmentConfig))
     from app.api import config_blueprint
     config_blueprint(app)
     config_extensions(app)
-
+    # 用于创建数据库表 一般不用 ：flask db init ， flask db migrate ，flask db upgrade
+    # from app.api.models.EsModels import sysEsLogs
     migrate = Migrate(app, db)
     Swagger(app, config=swagger_config, template=swagger_template)
 
     # 非nginx调试，解决跨域CORS问题，一种为全局使用, supports_credentials=True
     CORS(app, rresources={r'/*': {'origins': '*'}}, supports_credentials=True)
-    # socket 的信息
-    # 创建一个后台调度器
-    scheduler = BackgroundScheduler(timezone="Asia/Shanghai")
-    # scheduler.add_job(func=send_alert, trigger="interval", seconds=20)
-    # 启动调度器
-    scheduler.start()
+
+
     return app

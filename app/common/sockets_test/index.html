@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实时数据展示</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            animation: bgAnimation 10s infinite alternate;
+        }
+
+        @keyframes bgAnimation {
+            0% { background: linear-gradient(45deg, #6a11cb, #2575fc); }
+            50% { background: linear-gradient(45deg, #ff512f, #dd2476); }
+            100% { background: linear-gradient(45deg, #36d1dc, #5b86e5); }
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            animation: fadeInDown 1s ease-in-out;
+        }
+
+        @keyframes fadeInDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 80%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .data-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .data-card h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .data-card p {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .highlight {
+            animation: highlightAnimation 1.5s ease-in-out;
+        }
+
+        @keyframes highlightAnimation {
+            0% { background-color: rgba(255, 255, 255, 0.3); }
+            100% { background-color: transparent; }
+        }
+
+        .refresh-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .refresh-indicator span {
+            margin-left: 10px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>实时数据展示</h1>
+    <div class="refresh-indicator">
+        <span>⏳</span> 数据刷新中...
+    </div>
+    <div class="card-container" id="data-display">
+        <div class="data-card" id="register_count">
+            <h2>注册人数</h2>
+            <p>等待数据...</p>
+        </div>
+        <div class="data-card" id="last_register_time">
+            <h2>最后注册时间</h2>
+            <p>等待数据...</p>
+        </div>
+        <div class="data-card" id="last_login_time">
+            <h2>最后登录时间</h2>
+            <p>等待数据...</p>
+        </div>
+        <div class="data-card" id="last_realname_time">
+            <h2>实名认证时间</h2>
+            <p>等待数据...</p>
+        </div>
+        <div class="data-card" id="last_ocr_time">
+            <h2>OCR 时间</h2>
+            <p>等待数据...</p>
+        </div>
+        <div class="data-card" id="last_apply_time">
+            <h2>申请时间</h2>
+            <p>等待数据...</p>
+        </div>
+        <div class="data-card" id="last_withdraw_time">
+            <h2>提现时间</h2>
+            <p>等待数据...</p>
+        </div>
+        <div class="data-card" id="last_wechatpay_time">
+            <h2>微信支付时间</h2>
+            <p>等待数据...</p>
+        </div>
+        <div class="data-card" id="last_repayment_time">
+            <h2>还款时间</h2>
+            <p>等待数据...</p>
+        </div>
+        <div class="data-card" id="bing_card_time">
+            <h2>绑定银行卡时间</h2>
+            <p>等待数据...</p>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            const namespace = "/ws";
+            const socket = io.connect("http://" + document.domain + ":" + location.port + namespace);
+
+            socket.on("connect", function () {
+                console.log("已连接到服务器");
+                socket.emit("request_data"); // 发送请求获取数据
+                setInterval(requestData, 5000);
+            });
+
+
+
+            function requestData() {
+                socket.emit("request_data");
+                console.log("请求数据更新...");
+            }
+
+            socket.on("response_data", function (recv) {
+                console.log("接收到数据：", recv.data);
+                updateData("register_count", recv.data.register_count);
+                updateData("last_register_time", recv.data.last_register_time);
+                updateData("last_login_time", recv.data.last_login_time);
+                updateData("last_realname_time", recv.data.last_realname_time);
+                updateData("last_ocr_time", recv.data.last_ocr_time);
+                updateData("last_apply_time", recv.data.last_apply_time);
+                updateData("last_withdraw_time", recv.data.last_withdraw_time);
+                updateData("last_wechatpay_time", recv.data.last_wechatpay_time);
+                updateData("last_repayment_time", recv.data.last_repayment_time);
+                updateData("bing_card_time", recv.data.bing_card_time);
+            });
+            socket.on("disconnect", function () {
+                console.log("与服务器的连接已断开");
+            });
+            function updateData(id, value) {
+                const element = document.getElementById(id).querySelector("p");
+                if (element.textContent !== value) {
+                    element.textContent = value;
+                    element.parentNode.classList.add("highlight");
+                    setTimeout(() => element.parentNode.classList.remove("highlight"), 1500);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
